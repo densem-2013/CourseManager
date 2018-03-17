@@ -1,0 +1,68 @@
+﻿body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+.lcol {
+    padding: 0;
+    text-shadow: 1px 1px #207727d9;
+    text-align: center;
+    background-color: #6373d0
+}
+
+
+.tcol {
+    padding: 0 !important;
+    text-shadow: 1px 1px #e651d4;
+    text-align: center;
+    background-color: #6a719b;
+}
+
+ .tcol div { 
+    padding-bottom: 4px;
+}
+
+#corseTable tbody{
+    overflow-y: scroll;
+    height: 340px;
+    width: 100%;
+    position: absolute;
+}
+tr {
+    width: 100%;
+    height: 30px;
+}
+.input-group-addon i {
+    max-width: 20px;
+    min-width:15px;
+}
+
+#corseTable {
+    height: 380px;
+}
+.glyphicon {
+    line-height: 1.5;
+}
+.input-group {
+    padding: 5px;
+}
