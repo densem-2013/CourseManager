@@ -1,8 +1,12 @@
-﻿@model  CourseManager.Core.Models.CourseManagerView
+﻿@using Newtonsoft.Json
+@model  CourseManager.Core.Models.CourseManagerView
 
 @{
-    ViewBag.Title = "Course Manager";
     string[] days = { "Mon", "Tue", "Wed", "Thu", "Fri" };
+
+    var hoursJson = JsonConvert.SerializeObject(Model.WeekCourseHours);
+
+    ViewBag.Title = "Course Manager";
 }
 
 <div class="jumbotron">
@@ -11,71 +15,236 @@
 
 <div class="row">
     <div class="col-md-8">
-        <div class="col-md-5"><h2>Schedule of courses</h2></div><div class="col-md-1"><span id="prevWeek" class=" btn  btn-default glyphicon  glyphicon-arrow-left"></span></div><div class="col-md-5">
-            <h5>@Model.WeekTitle</h5>
-    </div><div class="col-md-1">
-            <span id="nextWeek" class=" btn  btn-default glyphicon glyphicon-arrow-right"></span>
+        <div class="row" >
+            <div class="col-md-5">
+                <h2>Schedule of courses</h2>
+            </div>
+            <div class="col-md-1"  style="padding-top: 15px;">
+                <span id="prevWeek" class=" btn  btn-default glyphicon  glyphicon-arrow-left"></span>
+            </div>
+            <div class="col-md-4"  style="padding-top: 15px;">
+                <h5>@Model.WeekTitle</h5>
+            </div>
+            <div class="col-md-2"  style="padding-top: 15px;">
+                <span id="nextWeek" class=" btn  btn-default glyphicon glyphicon-arrow-right"></span>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-bordered" week="@Model.Week" year="@Model.Year">
-                <thead>
+        <div class="row">
+            <div class="table-responsive">
+                <table id="hoursTable" class="table table-bordered" week="@Model.Week" year="@Model.Year">
+                    <thead>
                     <tr>
-                        <th class="tcol col-md-2"><div><span></span></div></th>
+                        <th class="tcol col-md-2">
+                            <div>
+                                <span></span>
+                            </div>
+                        </th>
                         @for (var j = 0; j < 5; j++)
-                    {
-                        <th class="tcol col-md-2"><div><span class="hview" daynum="@(j+1)">@days[j]</span></div></th>
-                }
+                        {
+                            <th class="tcol col-md-2">
+                                <div>
+                                    <span class="hview" daynum="@(j + 1)">@days[j]</span>
+                                </div>
+                            </th>
+                        }
                     </tr>
-                </thead>
-                @for (var i = 0; i < 9; i++)
-            {
-                <tr>
-                    <td class="lcol col-md-2"><div><span>@($"{i + 9:0#}:00")</span></div></td>
-                    @for (var j = 0; j < 5; j++)
-                {
-                    <td class="col-md-2"><div><span class="hview" daynum="@(j+1)"></span></div></td>
-            }
-                </tr>
-        }
-                <tfoot></tfoot>
+                    </thead>
+                    @for (var i = 0; i < 9; i++)
+                    {
+                        <tr hourid="@(i + 9)">
+                            <td class="lcol col-md-2">
+                                <div>
+                                    <span>@($"{i + 9:0#}:00")</span>
+                                </div>
+                            </td>
+                            @for (var j = 0; j < 5; j++)
+                            {
+                                <td class="col-md-2">
+                                    <div>
+                                        <span class="hview" daynum="@(j + 1)"></span>
+                                    </div>
+                                </td>
+                            }
+                        </tr>
+                    }
+                    <tfoot></tfoot>
+                </table>
+            </div>
+        </div>
+        </div>
+    <div class="col-md-4">
+        <div class="row">
+            <div div class="col-md-4">
+                <h2>Courses</h2>
+            </div>
+            <div div class="col-md-8" style="padding-top: 15px;">
+                <span id="addcourse" class="btn btn-default glyphicon glyphicon-plus" title="Add new course"></span>
+            </div>
+        </div>
+        <div class="table-hover table-responsive">
+            <table id="corseTable" class="table table-hover">
+                <tbody>
+                    @{
+                        int n = 0;
+                        foreach (var course in Model.Courses)
+                        {
+                            <tr cid="@course.Id">
+                                <td class="col-md-1"><span>@($"{++n}. ")</span></td>
+                                <td class="col-md-4">
+                                    <div>
+                                        <p>@course.Name</p>
+                                    </div>
+                                </td>
+                                <td class="col-md-1">
+                                    <div class="input-group colorpicker-component mycp">
+                                        <span class="input-group-addon"><i style="background-color: @course.Color;"></i></span>
+                                    </div>
+                                </td>
+                                <td class="col-md-1">
+                                    <span class="btn btn-success glyphicon glyphicon-edit"></span>
+                                </td>
+                                <td class="col-md-1">
+                                    <span class="btn btn-danger glyphicon glyphicon-trash"></span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
             </table>
         </div>
     </div>
-    <div class="col-md-4">
-        <h2>Courses</h2>
-        <table id="corseTable" class="table">
-            <tbody></tbody>
-            @{
-            int n = 0;
-            foreach (var course in Model.Courses)
-            {
-                <tr cid="@course.Id">
-                    <td class="col-md-1"><span>@($"{++n}. ")</span><input type="radio" name="optradio"></td>
-                    <td class="col-md-4">
-                        <div>
-                            <p>@course.Name</p>
-                        </div>
-                    </td>
-                    <td class="col-md-1">
-                        <div class="input-group colorpicker-component mycp">
-                            <span class="input-group-addon"><i style="background-color: @course.Color;"></i></span>
-                        </div>
-                    </td>
-                    <td class="col-md-1">
-                        <span class="btn btn-success glyphicon glyphicon-edit"></span>
-                    </td>
-                    <td class="col-md-1">
-                        <span class="btn btn-danger glyphicon glyphicon-trash"></span>
-                    </td>
-                </tr>
-        }}
-        </table>
+</div>
+
+
+
+<div class="container">
+    <!-- Trigger the modal with a button -->
+    <!-- Modal -->
+    <div class="modal fade" id="courseModal" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Add New Course</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-10">
+                        <span>
+                            Course Name: <input id="coursename" type="text" required style="width:100%"/>
+                        </span>
+                    </div>
+                    <div id="newcoursecp" class="input-group colorpicker-component mycp  col-md-2">
+                        <span class="input-group-addon"><i style="background-color: rgb(22, 129, 61);"></i></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                    <button id="courseok" class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Save</button>
+                </div>
+            </div>
+
+        </div>
     </div>
+</div>
+
+<div class="container">
+    <!-- Trigger the modal with a button -->
+    <!-- Modal -->
+    <div class="modal fade" id="error" role="dialog">
+        <div class="modal-dialog">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Error Message</h4>
+                </div>
+                <div class="modal-body">
+                    <p>Error: <span id="errtext"></span></p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                </div>
+            </div>
+
+        </div>
     </div>
+</div>
+
 @Scripts.Render("~/bundles/jquery")
 @Scripts.Render("~/bundles/bootstrap")
 <script type="text/javascript">
     $(function () {
-        $('.mycp').colorpicker();
+
+        var data = "@hoursJson";
+        var obj = $.parseJSON(data);
+
+        $.each(obj, function (index, item) {
+            $("#hoursTable tr[hourid=\'" + item.hour + "\'] td[daynum = \'" + item.day + "\' ] )");
+        });
+
+        $(".mycp:not(#newcoursecp)").colorpicker({ format: 'hex'});
+
+        $("#addcourse").on('click',
+            function() {
+                $("#newcoursecp").colorpicker({ color: "rgb(22, 129, 61);", format: 'hex' });
+                $("#courseModal").modal();
+            });
+        
+        $("#courseok").on('click', function (ev) {
+
+            let icolor = $('#newcoursecp').find('i:first').css('backgroundColor');
+            $.ajax({
+                type: 'POST',
+                url: '/api/course',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    "Name": $('#coursename').val(),
+                    "Color": icolor
+                }),
+                success: function (res) {
+                    
+                    let ind = $("#corseTable tbody tr").size() + 1;
+
+                    let newcurse = $(" <tr cid=" + res.id + ">" +
+                        "<td class=\"col-md-1\"><span>" + ind + "</span></td><td class=\"col-md-4\"><div><p>" + res.name + "</p></div></td><td class=\"col - md - 1\">" +
+                        "<div class=\"input-group colorpicker-component mycp colorpicker-element\" data-colorpicker-id=\"" + (ind - 1) + "\" >" +
+                        "<span class=\"input-group-addon\"><i style=\"background-color: " + res.color + "; \"></i></span></div></td><td class=\"col - md - 1\">" +
+                        "<span class=\"btn btn-success glyphicon glyphicon-edit\"></span></td>" +
+                        "<td class=\"col-md-1\">" +
+                        "<span class=\"btn btn-danger glyphicon glyphicon-trash\"></span></td></tr>");
+
+                    $("#corseTable tbody").append(newcurse);
+                },
+                error: function (response) {
+                    $("#errtext").val(response);
+                    $("#error").modal();
+                }
+            });
+        });
+
+        $(".btn.btn-danger.glyphicon.glyphicon-trash").on("click",
+            function (event) {
+
+                let trItem = $(event.target).closest("tr");
+
+                let id = trItem.attr("cid");
+
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/api/course/' + id,
+                    contentType: 'application/json',
+                    success: function () {
+
+                        $(trItem).remove();
+                    },
+                    error: function (response) {
+                        $("#errtext").text(response.statusText);
+                        $("#error").modal();
+                    }
+                });
+            });
     });
 </script>

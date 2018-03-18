@@ -3,6 +3,7 @@ using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
 using CourseManager.Core;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Unity.AspNet.Mvc;
 
@@ -21,8 +22,9 @@ namespace CourseManager.Web
             var container = UnityConfig.GetConfiguredContainer();
             DependencyResolver.SetResolver(new UnityDependencyResolver(container));
 
-            var json = GlobalConfiguration.Configuration.Formatters.JsonFormatter;
-            json.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            HttpConfiguration config = GlobalConfiguration.Configuration;
+            config.Formatters.JsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            config.Formatters.JsonFormatter.SerializerSettings.Formatting = Formatting.Indented;
         }
     }
 }

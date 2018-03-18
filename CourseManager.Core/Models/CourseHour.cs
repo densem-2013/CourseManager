@@ -30,8 +30,8 @@ namespace CourseManager.Core.Models
         public int Day { get; set; }
         [Required]
         public int Hour { get; set; }
-
     }
+
     public class CourseHourWeekView
     {
         [Required]
@@ -40,6 +40,5 @@ namespace CourseManager.Core.Models
         public int Day { get; set; }
         [Required]
         public int Hour { get; set; }
-
     }
 }

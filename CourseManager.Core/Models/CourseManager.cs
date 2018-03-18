@@ -132,7 +132,7 @@ namespace CourseManager.Core.Models
         public int Year { get; set; }
         public string WeekTitle { get; set; }
         public IEnumerable<CourseView> Courses { get; set; }
-        public IEnumerable<CourseHourView> WeekCourseHours { get; set; }
+        public IEnumerable<CourseHourWeekView> WeekCourseHours { get; set; }
     }
 
     public class CourseManagerWeekView

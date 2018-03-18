@@ -44,7 +44,7 @@ textarea {
 
 #corseTable tbody{
     overflow-y: scroll;
-    height: 340px;
+    height: 360px;
     width: 100%;
     position: absolute;
 }
@@ -59,6 +59,7 @@ tr {
 
 #corseTable {
     height: 380px;
+    margin: -15px 0;
 }
 .glyphicon {
     line-height: 1.5;
