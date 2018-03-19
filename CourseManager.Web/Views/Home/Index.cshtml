@@ -5,6 +5,7 @@
     string[] days = { "Mon", "Tue", "Wed", "Thu", "Fri" };
 
     var hoursJson = JsonConvert.SerializeObject(Model.WeekCourseHours);
+    var courseColorsJson = JsonConvert.SerializeObject(Model.Courses);
 
     ViewBag.Title = "Course Manager";
 }
@@ -43,8 +44,8 @@
                         {
                             <th class="tcol col-md-2">
                                 <div>
-                                    <span class="hview" daynum="@(j + 1)">@days[j]</span>
-                                </div>
+                                    <span  daynum="@(j + 1)">@days[j]</span>
+                               </div>
                             </th>
                         }
                     </tr>
@@ -59,7 +60,7 @@
                             </td>
                             @for (var j = 0; j < 5; j++)
                             {
-                                <td class="col-md-2">
+                                <td class="col-md-2" crsid>
                                     <div>
                                         <span class="hview" daynum="@(j + 1)"></span>
                                     </div>
@@ -82,7 +83,7 @@
             </div>
         </div>
         <div class="table-hover table-responsive">
-            <table id="corseTable" class="table table-hover">
+            <table id="corseTable" class="table">
                 <tbody>
                     @{
                         int n = 0;
@@ -177,13 +178,109 @@
 @Scripts.Render("~/bundles/bootstrap")
 <script type="text/javascript">
     $(function () {
+        var selectedCourseId = null;
+        var courseColorsJson = "@courseColorsJson".replace(/&quot;/g, '"');
+        var objColors = JSON.parse(courseColorsJson);
 
-        var data = "@hoursJson";
-        var obj = $.parseJSON(data);
-
-        $.each(obj, function (index, item) {
-            $("#hoursTable tr[hourid=\'" + item.hour + "\'] td[daynum = \'" + item.day + "\' ] )");
+        var courseColors = $.map(objColors, function (it) {
+            return {
+                CourseId: it.Id,
+                Color: it.Color,
+                ShortName: $.map(it.Name.split(" "),
+                    function(t) {
+                        return t.slice(0, 1);
+                    }).join("")
+            };
         });
+
+        var hours ="@hoursJson".replace(/&quot;/g, '"');
+        var objHours = $.parseJSON(hours);
+
+        $.each(objHours,
+            function(index, item) {
+
+                var first = courseColors.find(m => m.CourseId === item.CourseId);
+
+                if (first !== null && first !== undefined) {
+                    let el = $("[hourid=\'" + item.Hour + "\']").children().find("[daynum = \'" + item.Day + "\']");
+
+                    el.parent().parent().attr("crsid", item.CourseId).css({ "background-color": first.Color });
+
+                    el.html(first.ShortName);
+                    //  
+                }
+            });
+
+        $(document).on({
+            mouseenter: function (event) {
+                let target = $(event.currentTarget);
+                $(target).parent("tr").addClass("courseHover");
+            },
+            mouseleave: function (event) {
+                let target = $(event.currentTarget);
+                $(target).parent("tr").removeClass("courseHover");
+            }
+        }, "#corseTable tr[cid] td:nth-child(1),#corseTable tr[cid] td:nth-child(2)");
+
+        $(document).on('click', "#corseTable tr[cid] td:nth-child(1),#corseTable tr[cid] td:nth-child(2)", function(event) {
+
+            let target = $(event.currentTarget), parrentTr = $(target).parent("tr");
+            $(parrentTr).siblings("tr").removeClass("courseSelected");
+            
+            if ($(parrentTr).hasClass("courseSelected")) {
+                selectedCourseId = null;
+                $(parrentTr).removeClass("courseSelected");
+            } else {
+                selectedCourseId = $(parrentTr).attr("cid");
+                $(parrentTr).addClass("courseSelected");
+                
+            }
+        });
+
+        $(document).on('click', "[hourid] td:not(:first-child)",
+            function(event) {
+
+                if (selectedCourseId == null) {
+                    return;
+                }
+                var target = $(event.currentTarget);
+
+                let hour = $(target).parent("tr").attr("hourid"),
+                    day = $(this).index(),
+                    week = $(target).parents("table").attr("week"),
+                    year = $(target).parents("table").attr("year");
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/coursehour',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        "CourseId": selectedCourseId,
+                        "Week": week,
+                        "Year": year,
+                        "Day": day,
+                        "Hour": hour
+                    }),
+                    success: function(res) {
+                        if (res.courseId!=null) {
+                            var first = courseColors.find(m => m.CourseId === res.courseId);
+
+                            if (first !== null && first!== undefined) {
+                                $(target).css({ "background-color": first.Color });
+                                $(target).find(".hview").first().text(first.ShortName);
+                            }
+                        } else {
+                            $(target).css({ "background-color": "#ffffff" });
+                            $(target).find(".hview").first().text("");
+                        }
+                    },
+                    error: function (response) {
+                        $("#errtext").val(response.statusText);
+                        $("#error").modal();
+                    }
+                });
+
+            });
 
         $(".mycp:not(#newcoursecp)").colorpicker({ format: 'hex'});
 
@@ -217,6 +314,16 @@
                         "<span class=\"btn btn-danger glyphicon glyphicon-trash\"></span></td></tr>");
 
                     $("#corseTable tbody").append(newcurse);
+                    let newcourse = {
+                        CourseId: res.id,
+                        Color: res.color,
+                        ShortName: $.map(res.name.split(" "),
+                            function(t) {
+                                return t.slice(0, 1);
+                            }).join("")
+                    };
+
+                    courseColors.push(newcourse);
                 },
                 error: function (response) {
                     $("#errtext").val(response);
@@ -239,8 +346,54 @@
                     success: function () {
 
                         $(trItem).remove();
+                        $("[crsid=\"" + id + "\"]").css({ "background-color": "#ffffff" }).find(".hview").text("");
                     },
                     error: function (response) {
+                        $("#errtext").text(response.statusText);
+                        $("#error").modal();
+                    }
+                });
+            });
+
+        $("#nextWeek, #prevWeek").on("click",
+            function(event) {
+
+                let target = $(event.target),
+                    week = $("#hoursTable").attr("week"),
+                    year = $("#hoursTable").attr("year"),
+                    id = $(target).attr("id"),
+                    urllock = '/api/coursehour?week=' + week + '&year=' + year + '&next=' + (id === 'nextWeek' ? 'true' : 'false');
+
+                $.ajax({
+                    type: 'GET',
+                    url: urllock,
+                    contentType: 'application/json',
+                    success: function (res) {
+
+                        let allcells = $("[hourid]").find("[daynum]").parents("td");
+
+                        allcells.css({ "background-color": "#ffffff" }).find(".hview").text("");
+
+                        $("#prevWeek").parent().next().find("h5").text(res.weekTitle);
+
+                        $("#hoursTable").attr("week", res.week).attr("year", res.year);
+
+                        $.each(res.weekCourseHours,
+                            function(index, item) {
+
+                                var first = courseColors.find(m => m.CourseId === item.courseId);
+
+                                if (first !== null && first !== undefined) {
+                                    let el = $("[hourid=\'" + item.hour + "\']").find("[daynum = \'" + item.day + "\']");
+
+                                    el.parent().parent().attr("crsid", item.courseId).css({ "background-color": first.Color });
+
+                                    el.html(first.ShortName);
+                                    //  
+                                }
+                            });
+                    },
+                    error: function(response) {
                         $("#errtext").text(response.statusText);
                         $("#error").modal();
                     }

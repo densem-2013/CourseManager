@@ -67,3 +67,14 @@ tr {
 .input-group {
     padding: 5px;
 }
+.courseHover {
+    background-color: aquamarine;
+}
+.courseSelected {
+    background-color: cornflowerblue;
+}
+
+.hview {
+    text-align: center;
+    margin-left: 45px;
+}

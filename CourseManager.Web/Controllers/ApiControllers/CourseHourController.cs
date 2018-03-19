@@ -19,8 +19,13 @@ namespace CourseManager.Web.Controllers.ApiControllers
 
         [HttpGet]
         [Route("")]
-        public IHttpActionResult GetWeekHours([FromUri]WeekYear dto, bool next)
+        public IHttpActionResult GetWeekHours(int week,int year, bool next)
         {
+            var dto = new WeekYear
+            {
+                Week = week,
+                Year = year
+            };
             WeekYear weekDto = next ? Core.Models.CourseManager.GetNextWeekYear(dto) : Core.Models.CourseManager.GetPrevWeekYear(dto);
 
             var manager = new Core.Models.CourseManager(_unitOfWork, weekDto);
@@ -56,7 +61,7 @@ namespace CourseManager.Web.Controllers.ApiControllers
                 hoursRepo.Delete(hour);
                 hoursRepo.Save();
 
-                return Ok(dto);
+                return Ok();
             }
 
             hour = _mapper.Map<CourseHourView, CourseHour>(dto);

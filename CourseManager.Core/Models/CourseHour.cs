@@ -9,12 +9,12 @@ namespace CourseManager.Core.Models
         public int Week { get; set; }
         [Key, Column(Order = 1)]
         public int Year { get; set; }
+        public int? CourseId { get; set; }
         [Key, Column(Order = 2)]
-        public int CourseId { get; set; }
-        [Key, Column(Order = 3)]
         public int Day { get; set; }
-        [Key, Column(Order = 4)]
+        [Key, Column(Order = 3)]
         public int Hour { get; set; }
+        [ForeignKey("CourseId")]
         public virtual Course Course { get; set; }
     }
 

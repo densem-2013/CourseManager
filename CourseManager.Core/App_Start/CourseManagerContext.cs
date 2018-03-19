@@ -19,5 +19,15 @@ namespace CourseManager.Core
         {
             Database.SetInitializer(new DbInitializer());
         }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            // configures one-to-many relationship
+            modelBuilder.Entity<Course>()
+                .HasMany(s => s.CourseHours)
+                .WithOptional(g => g.Course)
+                .HasForeignKey(s => s.CourseId)
+                .WillCascadeOnDelete();
+        }
     }
 }
