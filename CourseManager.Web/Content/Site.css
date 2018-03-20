@@ -78,3 +78,7 @@ tr {
     text-align: center;
     margin-left: 45px;
 }
+
+#newcoursecp {
+    padding: 2px 5px 15px 2px;
+}

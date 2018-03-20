@@ -92,8 +92,21 @@
                             <tr cid="@course.Id">
                                 <td class="col-md-1"><span>@($"{++n}. ")</span></td>
                                 <td class="col-md-4">
-                                    <div>
+                                    <div cname >
                                         <p>@course.Name</p>
+                                    </div>
+                                    <div  cedit class="hidden">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <span>New Course Name:</span>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <span nameok class="btn btn-xs  btn-success glyphicon glyphicon-ok-circle"></span>
+                                            </div>
+                                        </div>
+                                        <div >
+                                            <input coursenameedit type="text" required/>
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="col-md-1">
@@ -131,18 +144,20 @@
                     <h4 class="modal-title">Add New Course</h4>
                 </div>
                 <div class="modal-body">
-                    <div class="col-md-10">
-                        <span>
-                            Course Name: <input id="coursename" type="text" required style="width:100%"/>
-                        </span>
-                    </div>
-                    <div id="newcoursecp" class="input-group colorpicker-component mycp  col-md-2">
-                        <span class="input-group-addon"><i style="background-color: rgb(22, 129, 61);"></i></span>
+                    <div class="row">
+                        <div class="col-md-10">
+                            <span>
+                                Course Name: <input id="coursename" type="text" required style="width: 100%" />
+                            </span>
+                        </div>
+                        <div id="newcoursecp" class="input-group colorpicker-component mycp col-md-1">
+                            <span class="input-group-addon"><i style="background-color: rgb(22, 129, 61);"></i></span>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
                     <button id="courseok" class="btn btn-primary" data-dismiss="modal" aria-hidden="true">Save</button>
+                    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
                 </div>
             </div>
 
@@ -188,7 +203,7 @@
                 Color: it.Color,
                 ShortName: $.map(it.Name.split(" "),
                     function(t) {
-                        return t.slice(0, 1);
+                        return t.slice(0, 1).toUpperCase();
                     }).join("")
             };
         });
@@ -226,6 +241,10 @@
 
             let target = $(event.currentTarget), parrentTr = $(target).parent("tr");
             $(parrentTr).siblings("tr").removeClass("courseSelected");
+
+            if ($(target).find("[coursenameedit]").is(":focus")) {
+                return;
+            }
             
             if ($(parrentTr).hasClass("courseSelected")) {
                 selectedCourseId = null;
@@ -282,11 +301,38 @@
 
             });
 
-        $(".mycp:not(#newcoursecp)").colorpicker({ format: 'hex'});
+        $(".mycp:not(#newcoursecp)").colorpicker({ format: 'hex' }).on('colorpickerChange', function (e) {
+            var colorStr = e.color.toString(e.color.format);
+
+            $.ajax({
+                type: 'PUT',
+                url: '/api/course/color',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    "Id": $(this).parents("tr").attr("cid"),
+                    "Color": colorStr
+                }),
+                success: function (res) {
+                    
+                    var first = courseColors.find(m => m.CourseId === res.id);
+                    
+                    if (first !== null && first !== undefined) {
+                        first.Color = res.color;
+                    }
+
+                    $("[crsid=\"" + res.id + "\"]").css({ "background-color": res.color });
+                },
+                error: function (response) {
+                    $("#errtext").val(response);
+                    $("#error").modal();
+                }
+            });
+        });
 
         $("#addcourse").on('click',
             function() {
                 $("#newcoursecp").colorpicker({ color: "rgb(22, 129, 61);", format: 'hex' });
+                $("#coursename").val("");
                 $("#courseModal").modal();
             });
         
@@ -353,6 +399,66 @@
                         $("#error").modal();
                     }
                 });
+            });
+
+        $(".btn.btn-success.glyphicon.glyphicon-edit").on("click",
+            function(event) {
+
+                let item = $(event.target).parent().siblings().find("[cname]");
+
+                $(item).next().removeClass("hidden");
+                $(item).next().find(".row").show();
+
+                $(item).addClass("hidden");
+
+                let name = $(item).find("p").text();
+
+                $(item).next().find("[coursenameedit]").val(name);
+
+            });
+
+        $("[nameok]").on('click',
+            function(event) {
+
+                event.preventDefault();
+
+                let trItem = $(event.target).closest("tr");
+
+                let id = trItem.attr("cid");
+                let newname = $(trItem).find("[cname]").next().find("[coursenameedit]").val();
+
+                $.ajax({
+                    type: 'PUT',
+                    url: '/api/course/name',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        "Id": id,
+                        "Name": newname
+                    }),
+                    success: function (res) {
+
+                        $(trItem).closest("[cname]").find("p").text(res.name);
+                        let sname = $.map(res.name.split(" "),
+                            function (t) {
+                                return t.slice(0, 1).toUpperCase();
+                            }).join("");
+
+                        $("[crsid=\"" + id + "\"]").find(".hview").text(sname);
+                    },
+                    error: function (response) {
+                        $("#errtext").text(response.statusText);
+                        $("#error").modal();
+                    }
+                });
+                
+                $(event.target).parent().parent().hide();
+
+                let item = $(trItem).find("[cname]");
+                $(trItem).find("[cedit]").addClass("hidden");
+                $(item).removeClass("hidden");
+                $(item).find("p").text(newname);
+
+                return false;
             });
 
         $("#nextWeek, #prevWeek").on("click",
